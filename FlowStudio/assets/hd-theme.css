@@ -1,0 +1,30 @@
+/* hd-theme.css - ธีมบ้านสำหรับ interactive HTML dashboard (rev 2 · 26 ก.ย. 2569)
+   สามธีม: data-theme="vivid" (สดใส: น้ำเงิน เหลือง ส้ม เขียว ฟ้า แดง บนพื้นครีม), "earth" (เอิร์ธโทน) และ "eco" (รักษ์โลก: เขียวป่า ฟ้าน้ำ เหลืองแดด ดิน บนพื้นเขียวใบไม้อ่อน)
+   แถบเมนูและหัวหน้าไม่ใช้พื้นไล่สีเฉย ๆ: แต่ละปุ่มมีสีประจำของตัวเอง (--vc) ทั้งไอคอน ตัวอักษร และพื้นเมื่อเลือก
+   ทุกองค์ประกอบอ้างตัวแปร --c-* เท่านั้น ห้ามเขียนรหัสสีตรงในหน้า เพื่อให้สลับธีมได้ทั้งแอป */
+:root,[data-theme="vivid"]{
+  --c-primary:#0077B6; --c-navy:#14346B; --c-sky:#00A6D6; --c-green:#2F9E44; --c-yellow:#F2B705; --c-amber:#C77800;
+  --c-orange:#F77F00; --c-red:#D64533; --c-brown:#8A5A2B; --c-grey:#8FA3A7; --c-purple:#7B4FBF; --c-pink:#D6336C;
+  --bg:#FBF5E9; --bg2:#F4ECDB; --card:#FFFFFF; --line:#E6DCC8; --ink:#1F2933; --ink2:#334451; --muted:#5A6B7B;
+  --side1:#0F2A57; --side2:#14346B; --side3:#0B4F7A;
+  --hero:linear-gradient(120deg,#14346B 0%,#0077B6 55%,#00A6D6 100%);
+  --hero-glow:radial-gradient(circle at 92% 10%,rgba(242,183,5,.42),transparent 34%),radial-gradient(circle at 70% 120%,rgba(247,127,0,.30),transparent 40%);
+}
+[data-theme="earth"]{
+  --c-primary:#3D6A8A; --c-navy:#2F4858; --c-sky:#6FA3B8; --c-green:#5E7D4F; --c-yellow:#D4A437; --c-amber:#A87A2A;
+  --c-orange:#C06C2F; --c-red:#A4493D; --c-brown:#7A5230; --c-grey:#A39A8A; --c-purple:#7A5C8A; --c-pink:#B5577A;
+  --bg:#F3EAD8; --bg2:#EADFC8; --card:#FFFCF5; --line:#DED2BC; --ink:#2B2620; --ink2:#43392F; --muted:#6E6353;
+  --side1:#2B2620; --side2:#3A3128; --side3:#2F4858;
+  --hero:linear-gradient(120deg,#2F4858 0%,#5E7D4F 55%,#A87A2A 100%);
+  --hero-glow:radial-gradient(circle at 92% 10%,rgba(212,164,55,.42),transparent 34%),radial-gradient(circle at 70% 120%,rgba(192,108,47,.30),transparent 40%);
+}
+[data-theme="eco"]{
+  --c-primary:#2D6A4F; --c-navy:#1B4332; --c-sky:#2A9D8F; --c-green:#6A994E; --c-yellow:#E9C46A; --c-amber:#A6800F;
+  --c-orange:#F4A261; --c-red:#E76F51; --c-brown:#8B5E34; --c-grey:#94A89A; --c-purple:#6C5B9E; --c-pink:#C4557A;
+  --bg:#F0F6EC; --bg2:#E3EEDC; --card:#FFFFFF; --line:#D3E3CC; --ink:#1B2B22; --ink2:#2F4538; --muted:#5B6F61;
+  --side1:#10261C; --side2:#1B4332; --side3:#1F5E4A;
+  --hero:linear-gradient(120deg,#1B4332 0%,#2D6A4F 45%,#2A9D8F 100%);
+  --hero-glow:radial-gradient(circle at 92% 10%,rgba(233,196,106,.50),transparent 34%),radial-gradient(circle at 70% 120%,rgba(106,153,78,.45),transparent 40%);
+}
+.hd-diagram{overflow-x:auto}.hd-diagram .hd-svg{min-width:1050px;display:block}
+.hd-t{background:color-mix(in srgb,var(--k,var(--c-primary)) 12%,white)}

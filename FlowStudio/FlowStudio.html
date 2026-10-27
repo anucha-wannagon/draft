@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="vivid">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>FlowStudio - ผังกระบวนการและผังบทบาท</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#14346B">
+<link rel="icon" href="icon.svg">
+<link rel="stylesheet" href="assets/hd-theme.css">
+<script src="assets/hd-fonts.js"></script>
+<script src="assets/hd-logos.js"></script>
+<script src="assets/hd-shell.js"></script>
+<script src="flow-core.js"></script>
+<script src="samples.js"></script>
+<style>
+body{margin:0}
+.fs-wrap{display:flex;gap:10px;height:calc(100vh - 118px);min-height:520px}
+.fs-tools{width:170px;flex:none;display:flex;flex-direction:column;gap:6px;overflow-y:auto;padding-right:2px}
+.fs-tools h4{margin:6px 0 2px;font-size:14px;color:var(--muted);font-weight:500}
+.fs-tools button,.fs-props button,.fs-bar button{display:flex;align-items:center;gap:8px;width:100%;border:1px solid var(--line);background:var(--card);border-radius:10px;padding:7px 10px;cursor:pointer;color:var(--ink);text-align:left;font-size:14px;min-height:36px}
+.fs-tools button.on{background:color-mix(in srgb,var(--tc,var(--c-primary)) 16%,white);border-color:var(--tc,var(--c-primary));color:var(--tc,var(--c-primary));font-weight:500}
+.fs-tools button .sw{width:18px;height:18px;border-radius:5px;flex:none;border:2px solid var(--tc);background:color-mix(in srgb,var(--tc) 18%,white)}
+.fs-tools button .sw.cap{border-radius:9px}.fs-tools button .sw.dia{transform:rotate(45deg) scale(.8)}.fs-tools button .sw.note{border-style:dashed}.fs-tools button .sw.lane{width:22px;height:14px}.fs-tools button .sw.circ{border-radius:50%}
+.fs-stage{flex:1;min-width:0;position:relative;border:1px solid var(--line);border-radius:12px;background:var(--card);overflow:hidden;touch-action:none}
+.fs-stage svg.main{width:100%;height:100%;display:block;cursor:default}
+.fs-bar{position:absolute;left:10px;top:10px;display:flex;gap:6px;flex-wrap:wrap;z-index:3}
+.fs-bar button{width:auto;min-height:32px;padding:4px 10px;background:color-mix(in srgb,var(--card) 92%,transparent);box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.fs-bar button.hot{background:var(--c-primary);color:#fff;border-color:var(--c-primary);font-weight:500}
+.fs-bar .sep{width:1px;background:var(--line);margin:0 2px}
+.fs-status{position:absolute;left:10px;bottom:8px;font-size:13px;color:var(--muted);background:color-mix(in srgb,var(--card) 90%,transparent);padding:2px 8px;border-radius:8px;z-index:3}
+.fs-msg{position:absolute;right:10px;bottom:8px;font-size:14px;color:#fff;background:var(--c-green);padding:4px 12px;border-radius:8px;z-index:3;display:none}
+.fs-props{width:260px;flex:none;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding-left:2px}
+.fs-props .box{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.fs-props h4{margin:0 0 6px;font-size:14px;color:var(--c-navy);font-weight:600}
+.fs-props label{display:block;font-size:13px;color:var(--muted);margin-top:6px}
+.fs-props input[type=text],.fs-props textarea,.fs-props select,.fs-props input[type=number]{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:14px;background:var(--card);color:var(--ink)}
+.fs-props textarea{min-height:60px;resize:vertical}
+.fs-props .row{display:flex;gap:6px}.fs-props .row>*{flex:1;min-width:0}
+.fs-props .swatches{display:flex;flex-wrap:wrap;gap:5px;margin-top:4px}
+.fs-props .swatches span{width:24px;height:24px;border-radius:7px;cursor:pointer;border:2px solid transparent}
+.fs-props .swatches span.on{border-color:var(--ink);box-shadow:0 0 0 2px #fff inset}
+.fs-props .hint{font-size:13px;color:var(--muted)}
+.fs-node{font-family:"Kanit","Leelawadee UI",Tahoma,sans-serif;font-size:16px;line-height:1.3;color:var(--ink);display:flex;align-items:center;justify-content:center;text-align:center;height:100%;box-sizing:border-box;padding:6px 10px;word-break:break-word;overflow:hidden}
+.fs-node b{font-weight:600}.fs-node small{display:block;font-size:14px;color:var(--muted);margin-top:2px}
+.fs-node.lane{align-items:flex-start;justify-content:flex-start;font-weight:600;font-size:16px;padding:8px 12px}
+.fs-node.note{align-items:flex-start;justify-content:flex-start;text-align:left;font-size:14px}
+.fs-node.dk{color:#fff}.fs-node.dk small{color:rgba(255,255,255,.85)}
+.fs-sel{fill:none;stroke:var(--c-primary);stroke-width:1.5;stroke-dasharray:5 4;pointer-events:none}
+.fs-handle{fill:#fff;stroke:var(--c-primary);stroke-width:1.5;cursor:nwse-resize}
+.fs-port{fill:var(--c-primary);stroke:#fff;stroke-width:1.5;cursor:crosshair}
+.fs-edge-hit{fill:none;stroke:transparent;stroke-width:16;cursor:pointer}
+.fs-elabel{font-family:"Kanit",sans-serif;font-size:14px;fill:var(--ink)}
+.fs-elabelbg{fill:var(--card);stroke:var(--line);stroke-width:.5;rx:4}
+.fs-marquee{fill:color-mix(in srgb,var(--c-primary) 10%,transparent);stroke:var(--c-primary);stroke-dasharray:4 3}
+.fs-grid line{stroke:var(--line);stroke-width:.5}
+.fs-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.fs-list .it{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.fs-list .it b{display:block;font-size:16px;color:var(--c-navy)}.fs-list .it small{color:var(--muted)}
+.fs-list .it .act{display:flex;gap:6px;margin-top:8px}.fs-list .it .act button{border:1px solid var(--line);background:var(--bg2);border-radius:8px;padding:5px 10px;cursor:pointer;font-size:14px}
+.hs-card pre{background:var(--bg2);border-radius:10px;padding:10px 12px;font-size:13px;overflow:auto}
+@media (max-width:980px){.fs-wrap{flex-direction:column;height:auto}.fs-tools{width:auto;flex-direction:row;flex-wrap:wrap;overflow:visible}.fs-tools h4{width:100%}.fs-tools button{width:auto}.fs-stage{height:62vh}.fs-props{width:auto}}
+</style>
+</head>
+<body>
+<script>
+HDShell.init({
+  key:"flowstudio", brand:["Flow","Studio"], tagline:"ผังกระบวนการและผังบทบาท", home:"editor", brandIcon:"grid",
+  logoLibrary:["mtec","nstda","mhesi","eow"],
+  views:[
+    {id:"editor",label:"ผัง (Editor)",icon:"grid",color:"c-primary",render:el=>FS.renderEditor(el)},
+    {id:"files",label:"ไฟล์และตัวอย่าง",icon:"file",color:"c-green",render:el=>FS.renderFiles(el)},
+    {id:"claude",label:"วางจาก Claude",icon:"chat",color:"c-orange",render:el=>FS.renderPaste(el)},
+    {id:"help",label:"วิธีใช้และรูปแบบไฟล์",icon:"info",color:"c-purple",render:el=>FS.renderHelp(el)}
+  ]});
+if("serviceWorker" in navigator && location.protocol.startsWith("http")) navigator.serviceWorker.register("sw.js").catch(()=>{});
+</script>
+</body></html>
