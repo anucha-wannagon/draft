@@ -1,4 +1,7 @@
-# FlowStudio (rev 1 · 27 ต.ค. 2569)
+# FlowStudio (rev 2 · 28 ต.ค. 2569)
+
+rev 2: เมนูภาษาอังกฤษ · พื้นที่ผังเต็มจอ (แถบเครื่องมือย่อเป็นไอคอนและแผงคุณสมบัติเป็นปุ่ม Properties บนแท็บเล็ต) · ปรับขนาดให้พอดีจอโดยอัตโนมัติเมื่อเปิดไฟล์
+
 
 แอปวาดผังกระบวนการและผังบทบาท ไฟล์เดียว ใช้ได้ทั้งคอมพ์ (เปิด FlowStudio.html) และแท็บเล็ต (ติดตั้งเป็น PWA จาก GitHub Pages)
 
@@ -11,7 +14,7 @@
 - skill/sketch-to-flow.zip  สกิลสำหรับให้ Claude อ่านภาพร่างแล้วเขียน .flow.json (ติดตั้งใน claude.ai > Settings > Skills)
 
 ## ขึ้น GitHub Pages สำหรับแท็บเล็ต
-1. สร้าง repo ใหม่ (เช่น AnuchaWannagon/flowstudio) คัดลอกทุกไฟล์ในโฟลเดอร์นี้ขึ้นไป (ยกเว้น files/ ถ้ามีผังที่ไม่ต้องการเผยแพร่)
+1. repo ที่ใช้อยู่: anucha-wannagon/draft โฟลเดอร์ FlowStudio คัดลอกทุกไฟล์ในโฟลเดอร์นี้ขึ้นไป (ยกเว้น files/ ถ้ามีผังที่ไม่ต้องการเผยแพร่)
 2. Settings > Pages > Deploy from branch main / root
 3. บนแท็บเล็ตเปิด https://<user>.github.io/flowstudio/FlowStudio.html ใน Chrome แล้วเลือก "เพิ่มไปยังหน้าจอหลัก"
 

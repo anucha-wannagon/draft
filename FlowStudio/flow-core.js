@@ -1,27 +1,27 @@
-/* flow-core.js - FlowStudio rev 1 (27 ต.ค. 2569)
+/* flow-core.js - FlowStudio rev 2 (28 ต.ค. 2569) - English UI, stage-first responsive layout
    โปรแกรมวาดผังกระบวนการและผังบทบาท: แก้ไขบน canvas (เมาส์ / S Pen / นิ้ว) · ไฟล์ .flow.json รูปแบบเดียว
    ส่งออก pptx (รูปทรงแก้ได้) / png / svg / pdf / html / Obsidian .canvas · ใช้ธีมบ้าน 3 ชุดจาก hd-theme.css */
 (function(G){"use strict";
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const uid=()=>Math.random().toString(36).slice(2,10);
 const COLORS=["c-primary","c-navy","c-sky","c-green","c-yellow","c-orange","c-red","c-brown","c-purple","c-pink","c-grey"];
-const COLOR_TH={"c-primary":"น้ำเงิน","c-navy":"กรม","c-sky":"ฟ้า","c-green":"เขียว","c-yellow":"เหลือง","c-orange":"ส้ม","c-red":"แดง","c-brown":"น้ำตาล","c-purple":"ม่วง","c-pink":"ชมพู","c-grey":"เทา"};
-const SHAPES={rect:"กิจกรรม (สี่เหลี่ยม)",round:"กล่องมน",capsule:"เริ่ม / จบ (แคปซูล)",diamond:"ตัดสินใจ (ข้าวหลามตัด)",circle:"วงกลม / ตัวเชื่อม",doc:"เอกสาร",note:"โน้ต",lane:"กลุ่ม / เลน"};
+const COLOR_TH={"c-primary":"Blue","c-navy":"Navy","c-sky":"Sky","c-green":"Green","c-yellow":"Yellow","c-orange":"Orange","c-red":"Red","c-brown":"Brown","c-purple":"Purple","c-pink":"Pink","c-grey":"Grey"};
+const SHAPES={rect:"Process",round:"Rounded box",capsule:"Start / End",diamond:"Decision",circle:"Connector",doc:"Document",note:"Note",lane:"Group / Lane"};
 const cv=c=>c&&c.startsWith("c-")?`var(--${c})`:(c||"var(--c-primary)");
 const hex=c=>{const v=getComputedStyle(document.documentElement).getPropertyValue("--"+c).trim();return v||"#0077B6"};
 const GRID=20, snap=v=>Math.round(v/GRID)*GRID;
 
 /* ---------- เอกสาร ---------- */
-function blank(title){return {v:1,title:title||"ผังใหม่",w:1600,h:1000,grid:true,nodes:[],edges:[],meta:{created:new Date().toISOString()}}}
+function blank(title){return {v:1,title:title||"Untitled",w:1600,h:1000,grid:true,nodes:[],edges:[],meta:{created:new Date().toISOString()}}}
 const S={doc:blank(),sel:new Set(),selEdge:null,tool:"select",zoom:1,pan:{x:0,y:0},undo:[],redo:[],handle:null,fileName:null,dirty:false,clip:null};
 G.FS_STATE=S;
 const node=id=>S.doc.nodes.find(n=>n.id===id);
 const edge=id=>S.doc.edges.find(e=>e.id===id);
 function pushUndo(){S.undo.push(JSON.stringify(S.doc));if(S.undo.length>120)S.undo.shift();S.redo=[];S.dirty=true;autosave()}
-function undo(){if(!S.undo.length)return;S.redo.push(JSON.stringify(S.doc));S.doc=JSON.parse(S.undo.pop());S.sel.clear();S.selEdge=null;draw();props();msg("ย้อนกลับแล้ว")}
-function redo(){if(!S.redo.length)return;S.undo.push(JSON.stringify(S.doc));S.doc=JSON.parse(S.redo.pop());S.sel.clear();S.selEdge=null;draw();props();msg("ทำซ้ำแล้ว")}
+function undo(){if(!S.undo.length)return;S.redo.push(JSON.stringify(S.doc));S.doc=JSON.parse(S.undo.pop());S.sel.clear();S.selEdge=null;draw();props();msg("Undo")}
+function redo(){if(!S.redo.length)return;S.undo.push(JSON.stringify(S.doc));S.doc=JSON.parse(S.redo.pop());S.sel.clear();S.selEdge=null;draw();props();msg("Redo")}
 function autosave(){try{localStorage.setItem("flowstudio_auto",JSON.stringify({at:Date.now(),name:S.fileName,doc:S.doc}))}catch(e){}}
-function load(doc,name){S.doc=migrate(doc);S.fileName=name||null;S.sel.clear();S.selEdge=null;S.undo=[];S.redo=[];S.dirty=false;if(document.getElementById("fsSvg")){draw();props();fit()}autosave()}
+function load(doc,name){S.autofit=true;S.doc=migrate(doc);S.fileName=name||null;S.sel.clear();S.selEdge=null;S.undo=[];S.redo=[];S.dirty=false;if(document.getElementById("fsSvg")){draw();props();fit()}autosave()}
 function migrate(d){d=d||{};const o=blank(d.title);Object.assign(o,d);o.nodes=(o.nodes||[]).map(n=>Object.assign({id:uid(),type:"rect",x:0,y:0,w:200,h:90,text:"",color:"c-primary",fill:"tint"},n));
   o.edges=(o.edges||[]).map(e=>Object.assign({id:uid(),head:"end",route:"ortho",color:"c-navy",label:""},e));return o}
 
@@ -80,10 +80,9 @@ function draw(){const svg=document.getElementById("fsSvg");if(!svg)return;const 
   g+=lanes.map(nodeSvg).join("");g+=d.edges.map(edgeSvg).join("");g+=others.map(nodeSvg).join("");
   if(S.marq){const m=S.marq;g+=`<rect class="fs-marquee" x="${Math.min(m.x0,m.x1)}" y="${Math.min(m.y0,m.y1)}" width="${Math.abs(m.x1-m.x0)}" height="${Math.abs(m.y1-m.y0)}"/>`}
   if(S.link){g+=`<path d="M${S.link.x0} ${S.link.y0} L${S.link.x1} ${S.link.y1}" stroke="var(--c-primary)" stroke-width="2" stroke-dasharray="6 4" fill="none"/>`}
-  svg.innerHTML=g;const st=document.getElementById("fsStatus");if(st)st.textContent=`${d.title} · ${d.nodes.length} กล่อง ${d.edges.length} เส้น · ซูม ${Math.round(S.zoom*100)}% ${S.dirty?"· ยังไม่บันทึก":""}`}
-function fit(){const svg=document.getElementById("fsSvg");if(!svg)return;const d=S.doc;let x0=d.w,y0=d.h,x1=0,y1=0;d.nodes.forEach(n=>{x0=Math.min(x0,n.x);y0=Math.min(y0,n.y);x1=Math.max(x1,n.x+n.w);y1=Math.max(y1,n.y+n.h)});
-  if(!d.nodes.length){x0=0;y0=0;x1=d.w;y1=d.h}const W=svg.clientWidth,H=svg.clientHeight,z=Math.min(W/(x1-x0+120),H/(y1-y0+120),1.5);S.zoom=z;S.pan={x:(W-(x1-x0)*z)/2-x0*z,y:(H-(y1-y0)*z)/2-y0*z};draw()}
-function zoomAt(f,cx,cy){const z=Math.max(.2,Math.min(4,S.zoom*f));S.pan.x=cx-(cx-S.pan.x)*z/S.zoom;S.pan.y=cy-(cy-S.pan.y)*z/S.zoom;S.zoom=z;draw()}
+  svg.innerHTML=g;const st=document.getElementById("fsStatus");if(st)st.textContent=`${d.title} · ${d.nodes.length} shapes · ${d.edges.length} connectors${S.dirty?" · unsaved":""}`;const zv=document.getElementById("fsZoom");if(zv)zv.textContent=Math.round(S.zoom*100)+"%"}
+function fit(){const svg=document.getElementById("fsSvg");if(!svg)return;S.autofit=true;const b=bounds(),W=svg.clientWidth,H=svg.clientHeight,z=Math.min(W/(b.w+40),H/(b.h+40),1.5);S.zoom=z;S.pan={x:(W-b.w*z)/2-b.x*z,y:(H-b.h*z)/2-b.y*z};draw()}
+function zoomAt(f,cx,cy){S.autofit=false;const z=Math.max(.2,Math.min(4,S.zoom*f));S.pan.x=cx-(cx-S.pan.x)*z/S.zoom;S.pan.y=cy-(cy-S.pan.y)*z/S.zoom;S.zoom=z;draw()}
 let msgT;function msg(t,bad){const m=document.getElementById("fsMsg");if(!m)return;m.textContent=t;m.style.background=bad?"var(--c-red)":"var(--c-green)";m.style.display="block";clearTimeout(msgT);msgT=setTimeout(()=>m.style.display="none",2600)}
 
 /* ---------- การโต้ตอบ (pointer events รองรับ เมาส์ นิ้ว S Pen) ---------- */
@@ -93,7 +92,7 @@ function bind(svg){
   svg.addEventListener("pointerdown",ev=>{ptrs.set(ev.pointerId,{x:ev.clientX,y:ev.clientY});svg.setPointerCapture(ev.pointerId);
     if(ptrs.size===2){const a=[...ptrs.values()];pinch={d:Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y),z:S.zoom,cx:(a[0].x+a[1].x)/2,cy:(a[0].y+a[1].y)/2,pan:{...S.pan}};drag=null;return}
     const p=toDoc(ev),t=ev.target,r=svg.getBoundingClientRect();
-    if(S.tool==="pan"||ev.button===1||S.space){drag={k:"pan",sx:ev.clientX,sy:ev.clientY,pan:{...S.pan}};return}
+    if(S.tool==="pan"||ev.button===1||S.space){S.autofit=false;drag={k:"pan",sx:ev.clientX,sy:ev.clientY,pan:{...S.pan}};return}
     if(t.dataset.h){const n=node(t.dataset.h);pushUndo();drag={k:"resize",n,x:p.x,y:p.y,w:n.w,h:n.h};return}
     if(t.dataset.port){drag={k:"link",from:t.dataset.port,side:t.dataset.side};S.link={x0:p.x,y0:p.y,x1:p.x,y1:p.y};return}
     if(t.dataset.eend){const e=edge(t.dataset.eend);pushUndo();drag={k:"eend",e,which:t.dataset.k};return}
@@ -118,12 +117,12 @@ function bind(svg){
     else if(drag.k==="marq"){S.marq.x1=p.x;S.marq.y1=p.y;draw()}});
   const up=ev=>{ptrs.delete(ev.pointerId);if(ptrs.size<2)pinch=null;if(!drag)return;const p=toDoc(ev);
     if(drag.k==="link"){const g=document.elementFromPoint(ev.clientX,ev.clientY),gg=g&&g.closest&&g.closest("g.n");S.link=null;
-      if(gg&&gg.dataset.id!==drag.from){pushUndo();const a=node(drag.from),b=node(gg.dataset.id),sd=autoSides(a,b);const e={id:uid(),from:{node:a.id,side:drag.side||sd[0]},to:{node:b.id,side:sd[1]},head:"end",route:"ortho",color:"c-navy",label:""};S.doc.edges.push(e);S.selEdge=e.id;S.sel.clear();msg("เชื่อมเส้นแล้ว")}}
+      if(gg&&gg.dataset.id!==drag.from){pushUndo();const a=node(drag.from),b=node(gg.dataset.id),sd=autoSides(a,b);const e={id:uid(),from:{node:a.id,side:drag.side||sd[0]},to:{node:b.id,side:sd[1]},head:"end",route:"ortho",color:"c-navy",label:""};S.doc.edges.push(e);S.selEdge=e.id;S.sel.clear();msg("Connected")}}
     else if(drag.k==="marq"){const m=S.marq;S.marq=null;const x0=Math.min(m.x0,m.x1),x1=Math.max(m.x0,m.x1),y0=Math.min(m.y0,m.y1),y1=Math.max(m.y0,m.y1);if(x1-x0>6&&y1-y0>6)S.doc.nodes.forEach(n=>{if(n.type!=="lane"&&n.x>=x0&&n.y>=y0&&n.x+n.w<=x1&&n.y+n.h<=y1)S.sel.add(n.id)})}
     drag=null;draw();props()};
   svg.addEventListener("pointerup",up);svg.addEventListener("pointercancel",up);
   svg.addEventListener("wheel",ev=>{ev.preventDefault();const r=svg.getBoundingClientRect();if(ev.ctrlKey||ev.metaKey||true){zoomAt(ev.deltaY<0?1.1:0.9,ev.clientX-r.left,ev.clientY-r.top)}},{passive:false});
-  svg.addEventListener("dblclick",ev=>{const g=ev.target.closest&&ev.target.closest("g.n");if(g){S.sel.clear();S.sel.add(g.dataset.id);S.selEdge=null;draw();props();const t=document.getElementById("pText");if(t){t.focus();t.select()}}});
+  svg.addEventListener("dblclick",ev=>{const g=ev.target.closest&&ev.target.closest("g.n");if(g){S.sel.clear();S.sel.add(g.dataset.id);S.selEdge=null;draw();props();const pp=document.getElementById("fsProps");if(pp&&getComputedStyle(pp).display==="none")togglePanel();const t=document.getElementById("pText");if(t){t.focus();t.select()}}});
 }
 addEventListener("keydown",ev=>{if(!document.getElementById("fsSvg"))return;const tag=(ev.target.tagName||"").toLowerCase();if(tag==="input"||tag==="textarea"||tag==="select")return;
   if(ev.key===" "){S.space=true;ev.preventDefault()}
@@ -140,13 +139,13 @@ addEventListener("keyup",ev=>{if(ev.key===" ")S.space=false});
 
 /* ---------- คำสั่งแก้ไข ---------- */
 const DEF={rect:[200,90],round:[200,90],capsule:[180,60],diamond:[200,120],circle:[70,70],doc:[180,100],note:[220,110],lane:[600,300]};
-function addNode(type,x,y){pushUndo();const[w,h]=DEF[type]||[200,90];const n={id:uid(),type,x,y,w,h,text:type==="lane"?"กลุ่ม":type==="note"?"โน้ต":SHAPES[type].split(" ")[0],sub:"",color:type==="diamond"?"c-orange":type==="capsule"?"c-navy":type==="note"?"c-yellow":type==="lane"?"c-grey":"c-primary",fill:"tint"};
+function addNode(type,x,y){pushUndo();const[w,h]=DEF[type]||[200,90];const n={id:uid(),type,x,y,w,h,text:type==="lane"?"Group":type==="note"?"Note":SHAPES[type].split(" ")[0],sub:"",color:type==="diamond"?"c-orange":type==="capsule"?"c-navy":type==="note"?"c-yellow":type==="lane"?"c-grey":"c-primary",fill:"tint"};
   if(type==="lane")S.doc.nodes.unshift(n);else S.doc.nodes.push(n);S.sel.clear();S.sel.add(n.id);S.selEdge=null;S.tool="select";toolbar();draw();props();const t=document.getElementById("pText");if(t){t.focus();t.select()}}
 function del(){if(!S.sel.size&&!S.selEdge)return;pushUndo();if(S.selEdge){S.doc.edges=S.doc.edges.filter(e=>e.id!==S.selEdge);S.selEdge=null}
-  S.doc.nodes=S.doc.nodes.filter(n=>!S.sel.has(n.id));S.doc.edges=S.doc.edges.filter(e=>!(e.from.node&&S.sel.has(e.from.node))&&!(e.to.node&&S.sel.has(e.to.node)));S.sel.clear();draw();props();msg("ลบแล้ว")}
-function copy(){if(!S.sel.size)return;const ids=[...S.sel];S.clip={nodes:S.doc.nodes.filter(n=>S.sel.has(n.id)),edges:S.doc.edges.filter(e=>ids.includes(e.from.node)&&ids.includes(e.to.node))};msg("คัดลอกแล้ว")}
+  S.doc.nodes=S.doc.nodes.filter(n=>!S.sel.has(n.id));S.doc.edges=S.doc.edges.filter(e=>!(e.from.node&&S.sel.has(e.from.node))&&!(e.to.node&&S.sel.has(e.to.node)));S.sel.clear();draw();props();msg("Deleted")}
+function copy(){if(!S.sel.size)return;const ids=[...S.sel];S.clip={nodes:S.doc.nodes.filter(n=>S.sel.has(n.id)),edges:S.doc.edges.filter(e=>ids.includes(e.from.node)&&ids.includes(e.to.node))};msg("Copied")}
 function paste(){if(!S.clip)return;pushUndo();const map={};S.sel.clear();S.clip.nodes.forEach(n=>{const m=JSON.parse(JSON.stringify(n));m.id=uid();map[n.id]=m.id;m.x+=GRID*2;m.y+=GRID*2;S.doc.nodes.push(m);S.sel.add(m.id)});
-  S.clip.edges.forEach(e=>{const f=JSON.parse(JSON.stringify(e));f.id=uid();f.from.node=map[f.from.node];f.to.node=map[f.to.node];S.doc.edges.push(f)});draw();props();msg("วางแล้ว")}
+  S.clip.edges.forEach(e=>{const f=JSON.parse(JSON.stringify(e));f.id=uid();f.from.node=map[f.from.node];f.to.node=map[f.to.node];S.doc.edges.push(f)});draw();props();msg("Pasted")}
 function align(k){const ns=[...S.sel].map(node);if(ns.length<2)return;pushUndo();
   const L=Math.min(...ns.map(n=>n.x)),R=Math.max(...ns.map(n=>n.x+n.w)),T=Math.min(...ns.map(n=>n.y)),B=Math.max(...ns.map(n=>n.y+n.h));
   if(k==="left")ns.forEach(n=>n.x=L);if(k==="right")ns.forEach(n=>n.x=R-n.w);if(k==="hc")ns.forEach(n=>n.x=(L+R)/2-n.w/2);
@@ -159,39 +158,40 @@ function order(front){if(!S.sel.size)return;pushUndo();const sel=S.doc.nodes.fil
 /* ---------- แผงคุณสมบัติ ---------- */
 function props(){const el=document.getElementById("fsProps");if(!el)return;
   const sw=(cur,fn)=>`<div class="swatches">${COLORS.map(c=>`<span class="${c===cur?"on":""}" title="${COLOR_TH[c]}" style="background:${cv(c)}" onclick="FS.${fn}('${c}')"></span>`).join("")}</div>`;
+  const SIDE={right:"Right",left:"Left",top:"Top",bottom:"Bottom"};
   if(S.selEdge){const e=edge(S.selEdge);if(!e){S.selEdge=null;return props()}
-    el.innerHTML=`<div class="box"><h4>เส้นเชื่อม</h4><label>ป้ายบนเส้น</label><input type="text" id="pLabel" value="${esc(e.label)}" oninput="FS.setE('label',this.value)">
-    <div class="row"><div><label>หัวลูกศร</label><select onchange="FS.setE('head',this.value)">${[["end","ปลายทาง"],["both","สองทาง"],["none","ไม่มี"]].map(o=>`<option value="${o[0]}" ${e.head===o[0]?"selected":""}>${o[1]}</option>`).join("")}</select></div>
-    <div><label>เส้น</label><select onchange="FS.setE('route',this.value)"><option value="ortho" ${e.route==="ortho"?"selected":""}>หักมุม</option><option value="straight" ${e.route==="straight"?"selected":""}>ตรง</option></select></div></div>
-    <div class="row"><div><label>ออกจากด้าน</label><select onchange="FS.setSide('from',this.value)">${["right","left","top","bottom"].map(s=>`<option value="${s}" ${e.from.side===s?"selected":""}>${{right:"ขวา",left:"ซ้าย",top:"บน",bottom:"ล่าง"}[s]}</option>`).join("")}</select></div>
-    <div><label>เข้าที่ด้าน</label><select onchange="FS.setSide('to',this.value)">${["left","right","top","bottom"].map(s=>`<option value="${s}" ${e.to.side===s?"selected":""}>${{right:"ขวา",left:"ซ้าย",top:"บน",bottom:"ล่าง"}[s]}</option>`).join("")}</select></div></div>
-    <div class="row"><div><label>ตำแหน่งออก (0-1)</label><input type="number" step="0.1" min="0.1" max="0.9" value="${e.from.pos??0.5}" onchange="FS.setPos('from',this.value)"></div><div><label>ตำแหน่งเข้า (0-1)</label><input type="number" step="0.1" min="0.1" max="0.9" value="${e.to.pos??0.5}" onchange="FS.setPos('to',this.value)"></div></div>
-    <label>จุดอ้อม (x,y คั่นด้วย ; เช่น 80,210; 80,900)</label><input type="text" value="${esc((e.via||[]).map(v=>v.x+","+v.y).join("; "))}" onchange="FS.setVia(this.value)">
-    <label>สี</label>${sw(e.color,"setEColor")}<label><input type="checkbox" ${e.dash?"checked":""} onchange="FS.setE('dash',this.checked)"> เส้นประ</label>
-    <div class="row" style="margin-top:8px"><button onclick="FS.flipEdge()">สลับทิศ</button><button onclick="FS.del()" style="color:var(--c-red)">ลบเส้น</button></div></div>`;return}
+    el.innerHTML=`<div class="box"><h4>Connector</h4><label>Label</label><input type="text" id="pLabel" value="${esc(e.label)}" oninput="FS.setE('label',this.value)">
+    <div class="row"><div><label>Arrow head</label><select onchange="FS.setE('head',this.value)">${[["end","End"],["both","Both"],["none","None"]].map(o=>`<option value="${o[0]}" ${e.head===o[0]?"selected":""}>${o[1]}</option>`).join("")}</select></div>
+    <div><label>Route</label><select onchange="FS.setE('route',this.value)"><option value="ortho" ${e.route==="ortho"?"selected":""}>Orthogonal</option><option value="straight" ${e.route==="straight"?"selected":""}>Straight</option></select></div></div>
+    <div class="row"><div><label>From side</label><select onchange="FS.setSide('from',this.value)">${["right","left","top","bottom"].map(s=>`<option value="${s}" ${e.from.side===s?"selected":""}>${SIDE[s]}</option>`).join("")}</select></div>
+    <div><label>To side</label><select onchange="FS.setSide('to',this.value)">${["left","right","top","bottom"].map(s=>`<option value="${s}" ${e.to.side===s?"selected":""}>${SIDE[s]}</option>`).join("")}</select></div></div>
+    <div class="row"><div><label>From position (0-1)</label><input type="number" step="0.1" min="0.1" max="0.9" value="${e.from.pos??0.5}" onchange="FS.setPos('from',this.value)"></div><div><label>To position (0-1)</label><input type="number" step="0.1" min="0.1" max="0.9" value="${e.to.pos??0.5}" onchange="FS.setPos('to',this.value)"></div></div>
+    <label>Waypoints (x,y; x,y)</label><input type="text" value="${esc((e.via||[]).map(v=>v.x+","+v.y).join("; "))}" onchange="FS.setVia(this.value)">
+    <label>Color</label>${sw(e.color,"setEColor")}<label><input type="checkbox" ${e.dash?"checked":""} onchange="FS.setE('dash',this.checked)"> Dashed</label>
+    <div class="row" style="margin-top:8px"><button onclick="FS.flipEdge()">Flip direction</button><button onclick="FS.del()" style="color:var(--c-red)">Delete</button></div></div>`;return}
   if(S.sel.size===1){const n=node([...S.sel][0]);if(!n){S.sel.clear();return props()}
-    el.innerHTML=`<div class="box"><h4>กล่อง</h4><label>ข้อความหลัก</label><input type="text" id="pText" value="${esc(n.text)}" oninput="FS.setN('text',this.value)">
-    <label>บรรทัดรอง</label><textarea oninput="FS.setN('sub',this.value)">${esc(n.sub||"")}</textarea>
-    <div class="row"><div><label>รูปทรง</label><select onchange="FS.setN('type',this.value)">${Object.keys(SHAPES).map(k=>`<option value="${k}" ${n.type===k?"selected":""}>${SHAPES[k]}</option>`).join("")}</select></div>
-    <div><label>พื้น</label><select onchange="FS.setN('fill',this.value)"><option value="tint" ${n.fill==="tint"?"selected":""}>สีอ่อน</option><option value="solid" ${n.fill==="solid"?"selected":""}>สีเข้ม</option><option value="white" ${n.fill==="white"?"selected":""}>ขาว</option></select></div></div>
-    <label>สี</label>${sw(n.color,"setNColor")}
-    <div class="row"><div><label>ไอคอน</label><select onchange="FS.setN('icon',this.value)"><option value="">ไม่มี</option>${Object.keys(ICONS).map(k=>`<option value="${k}" ${n.icon===k?"selected":""}>${k}</option>`).join("")}</select></div><div><label>ขนาดอักษร</label><input type="number" min="14" max="40" value="${n.font||16}" onchange="FS.setN('font',+this.value)"></div></div>
-    <div class="row"><div><label>กว้าง</label><input type="number" value="${n.w}" onchange="FS.setN('w',+this.value)"></div><div><label>สูง</label><input type="number" value="${n.h}" onchange="FS.setN('h',+this.value)"></div></div>
-    <label><input type="checkbox" ${n.dash?"checked":""} onchange="FS.setN('dash',this.checked)"> ขอบเส้นประ</label>
-    <div class="row" style="margin-top:8px"><button onclick="FS.order(true)">ไปหน้าสุด</button><button onclick="FS.order(false)">ไปหลังสุด</button></div>
-    <div class="row" style="margin-top:6px"><button onclick="FS.copy();FS.paste()">ทำสำเนา</button><button onclick="FS.del()" style="color:var(--c-red)">ลบกล่อง</button></div></div>
-    <div class="box hint">ลากวงกลมที่ขอบกล่องไปยังกล่องอื่นเพื่อสร้างเส้นเชื่อม · ลากมุมล่างขวาเพื่อย่อขยาย · ดับเบิลคลิกเพื่อพิมพ์ข้อความ</div>`;return}
-  if(S.sel.size>1){el.innerHTML=`<div class="box"><h4>เลือก ${S.sel.size} กล่อง</h4><label>จัดแนว</label>
-    <div class="row"><button onclick="FS.align('left')">ซ้าย</button><button onclick="FS.align('hc')">กลาง</button><button onclick="FS.align('right')">ขวา</button></div>
-    <div class="row" style="margin-top:6px"><button onclick="FS.align('top')">บน</button><button onclick="FS.align('vc')">กึ่งกลาง</button><button onclick="FS.align('bottom')">ล่าง</button></div>
-    <div class="row" style="margin-top:6px"><button onclick="FS.align('dh')">กระจายแนวนอน</button><button onclick="FS.align('dv')">กระจายแนวตั้ง</button></div>
-    <div class="row" style="margin-top:6px"><button onclick="FS.align('samew')">ขนาดเท่ากัน</button><button onclick="FS.del()" style="color:var(--c-red)">ลบทั้งหมด</button></div>
-    <label>สีทั้งหมด</label>${sw("","setNColor")}</div>`;return}
-  const d=S.doc;el.innerHTML=`<div class="box"><h4>ผัง</h4><label>ชื่อผัง</label><input type="text" value="${esc(d.title)}" onchange="FS.setDoc('title',this.value)">
-    <div class="row"><div><label>กว้าง (px)</label><input type="number" value="${d.w}" onchange="FS.setDoc('w',+this.value)"></div><div><label>สูง (px)</label><input type="number" value="${d.h}" onchange="FS.setDoc('h',+this.value)"></div></div>
-    <label><input type="checkbox" ${d.grid?"checked":""} onchange="FS.setDoc('grid',this.checked)"> แสดงตาราง</label>
-    <p class="hint" style="margin:8px 0 0">${S.fileName?"ไฟล์: "+esc(S.fileName):"ยังไม่ได้บันทึกเป็นไฟล์"} · บันทึกอัตโนมัติในเบราว์เซอร์ทุกการแก้</p></div>
-    <div class="box hint"><b>วิธีใช้เร็ว</b><br>เลือกรูปทรงด้านซ้าย แล้วคลิกบนผังเพื่อวาง · ลากกล่องเพื่อย้าย (ย้ายทั้งกลุ่มเมื่อลากเลน) · Shift+คลิก เลือกหลายกล่อง · ลากพื้นที่ว่างเพื่อเลือกเป็นกรอบ · ล้อเมาส์หรือสองนิ้ว ซูม · กด Space ค้างแล้วลาก หรือเครื่องมือ "เลื่อนผัง" · Ctrl+Z ย้อนกลับ · Delete ลบ</div>`}
+    el.innerHTML=`<div class="box"><h4>Shape</h4><label>Text</label><input type="text" id="pText" value="${esc(n.text)}" oninput="FS.setN('text',this.value)">
+    <label>Subtitle</label><textarea oninput="FS.setN('sub',this.value)">${esc(n.sub||"")}</textarea>
+    <div class="row"><div><label>Type</label><select onchange="FS.setN('type',this.value)">${Object.keys(SHAPES).map(k=>`<option value="${k}" ${n.type===k?"selected":""}>${SHAPES[k]}</option>`).join("")}</select></div>
+    <div><label>Fill</label><select onchange="FS.setN('fill',this.value)"><option value="tint" ${n.fill==="tint"?"selected":""}>Tint</option><option value="solid" ${n.fill==="solid"?"selected":""}>Solid</option><option value="white" ${n.fill==="white"?"selected":""}>White</option></select></div></div>
+    <label>Color</label>${sw(n.color,"setNColor")}
+    <div class="row"><div><label>Icon</label><select onchange="FS.setN('icon',this.value)"><option value="">None</option>${Object.keys(ICONS).map(k=>`<option value="${k}" ${n.icon===k?"selected":""}>${k}</option>`).join("")}</select></div><div><label>Font size</label><input type="number" min="14" max="40" value="${n.font||16}" onchange="FS.setN('font',+this.value)"></div></div>
+    <div class="row"><div><label>Width</label><input type="number" value="${n.w}" onchange="FS.setN('w',+this.value)"></div><div><label>Height</label><input type="number" value="${n.h}" onchange="FS.setN('h',+this.value)"></div></div>
+    <label><input type="checkbox" ${n.dash?"checked":""} onchange="FS.setN('dash',this.checked)"> Dashed border</label>
+    <div class="row" style="margin-top:8px"><button onclick="FS.order(true)">Bring to front</button><button onclick="FS.order(false)">Send to back</button></div>
+    <div class="row" style="margin-top:6px"><button onclick="FS.copy();FS.paste()">Duplicate</button><button onclick="FS.del()" style="color:var(--c-red)">Delete</button></div></div>
+    <div class="box hint">Drag a port (circle on the border) to another shape to connect · drag the bottom-right handle to resize · double-click to edit text</div>`;return}
+  if(S.sel.size>1){el.innerHTML=`<div class="box"><h4>${S.sel.size} shapes selected</h4><label>Align</label>
+    <div class="row"><button onclick="FS.align('left')">Left</button><button onclick="FS.align('hc')">Center</button><button onclick="FS.align('right')">Right</button></div>
+    <div class="row" style="margin-top:6px"><button onclick="FS.align('top')">Top</button><button onclick="FS.align('vc')">Middle</button><button onclick="FS.align('bottom')">Bottom</button></div>
+    <div class="row" style="margin-top:6px"><button onclick="FS.align('dh')">Distribute H</button><button onclick="FS.align('dv')">Distribute V</button></div>
+    <div class="row" style="margin-top:6px"><button onclick="FS.align('samew')">Same size</button><button onclick="FS.del()" style="color:var(--c-red)">Delete all</button></div>
+    <label>Color (all)</label>${sw("","setNColor")}</div>`;return}
+  const d=S.doc;el.innerHTML=`<div class="box"><h4>Diagram</h4><label>Title</label><input type="text" value="${esc(d.title)}" onchange="FS.setDoc('title',this.value)">
+    <div class="row"><div><label>Width (px)</label><input type="number" value="${d.w}" onchange="FS.setDoc('w',+this.value)"></div><div><label>Height (px)</label><input type="number" value="${d.h}" onchange="FS.setDoc('h',+this.value)"></div></div>
+    <label><input type="checkbox" ${d.grid?"checked":""} onchange="FS.setDoc('grid',this.checked)"> Show grid</label>
+    <p class="hint" style="margin:8px 0 0">${S.fileName?"File: "+esc(S.fileName):"Not saved to a file yet"} · auto-saved in this browser</p></div>
+    <div class="box hint"><b>Quick guide</b><br>Pick a shape on the left, then click on the canvas to place it · drag to move (dragging a lane moves its contents) · Shift+click for multi-select · drag on empty space for marquee select · mouse wheel or pinch to zoom · hold Space and drag, or use the Pan tool · Ctrl+Z undo · Delete removes</div>`}
 function setN(k,v){const ids=[...S.sel];if(!ids.length)return;if(!["text","sub"].includes(k))pushUndo();else{if(!S.textUndo){pushUndo();S.textUndo=true;setTimeout(()=>S.textUndo=false,1500)}}ids.forEach(i=>{const n=node(i);if(n)n[k]=v});S.dirty=true;autosave();draw();if(!["text","sub"].includes(k))props()}
 function setNColor(c){setN("color",c)}
 function setE(k,v){const e=edge(S.selEdge);if(!e)return;if(k!=="label")pushUndo();e[k]=v;S.dirty=true;autosave();draw();if(k!=="label")props()}
@@ -203,11 +203,13 @@ function flipEdge(){const e=edge(S.selEdge);if(!e)return;pushUndo();[e.from,e.to
 function setDoc(k,v){pushUndo();S.doc[k]=v;draw();props()}
 
 /* ---------- เครื่องมือ ---------- */
-const TOOLS=[["select","เลือก / ย้าย","c-navy"],["pan","เลื่อนผัง","c-sky"],["connect","ลากเส้นเชื่อม","c-green"]];
+const TOOLS=[["select","Select / Move","c-navy","target"],["pan","Pan","c-sky","map"],["connect","Connect","c-green","link"]];
+const SHAPE_TC={diamond:"c-orange",capsule:"c-navy",note:"c-amber",lane:"c-grey"};
 function toolbar(){const el=document.getElementById("fsTools");if(!el)return;
-  el.innerHTML=`<h4>เครื่องมือ</h4>${TOOLS.map(t=>`<button class="${S.tool===t[0]?"on":""}" style="--tc:var(--${t[2]})" onclick="FS.tool('${t[0]}')">${HDShell.ic(t[0]==="select"?"target":t[0]==="pan"?"map":"link",16)}${t[1]}</button>`).join("")}
-  <h4>วางรูปทรง (คลิกบนผัง)</h4>${Object.keys(SHAPES).map(k=>`<button class="${S.tool===k?"on":""}" style="--tc:var(--${k==="diamond"?"c-orange":k==="capsule"?"c-navy":k==="note"?"c-amber":k==="lane"?"c-grey":"c-primary"})" onclick="FS.tool('${k}')"><span class="sw ${k==="capsule"?"cap":k==="diamond"?"dia":k==="note"?"note":k==="lane"?"lane":k==="circle"?"circ":""}"></span>${SHAPES[k]}</button>`).join("")}
-  <h4>แก้ไข</h4><button onclick="FS.undo()">${HDShell.ic("clock",16)}ย้อนกลับ (Ctrl+Z)</button><button onclick="FS.redo()">${HDShell.ic("trend",16)}ทำซ้ำ (Ctrl+Y)</button><button onclick="FS.copy();FS.paste()">${HDShell.ic("file",16)}ทำสำเนา</button><button onclick="FS.del()" style="color:var(--c-red)">${HDShell.ic("x",16)}ลบ (Delete)</button>`}
+  const b=(id,label,tc,inner)=>`<button class="${S.tool===id?"on":""}" style="--tc:var(--${tc})" title="${label}" onclick="FS.tool('${id}')">${inner}<span class="lb">${label}</span></button>`;
+  el.innerHTML=`<h4>Tools</h4>${TOOLS.map(t=>b(t[0],t[1],t[2],HDShell.ic(t[3],16))).join("")}
+  <h4>Shapes</h4>${Object.keys(SHAPES).map(k=>b(k,SHAPES[k],SHAPE_TC[k]||"c-primary",`<span class="sw ${k==="capsule"?"cap":k==="diamond"?"dia":k==="note"?"note":k==="lane"?"lane":k==="circle"?"circ":""}"></span>`)).join("")}
+  <h4>Edit</h4><button title="Undo (Ctrl+Z)" onclick="FS.undo()">${HDShell.ic("clock",16)}<span class="lb">Undo</span></button><button title="Redo (Ctrl+Y)" onclick="FS.redo()">${HDShell.ic("trend",16)}<span class="lb">Redo</span></button><button title="Duplicate" onclick="FS.copy();FS.paste()">${HDShell.ic("file",16)}<span class="lb">Duplicate</span></button><button title="Delete" onclick="FS.del()" style="color:var(--c-red)">${HDShell.ic("x",16)}<span class="lb">Delete</span></button>`}
 function tool(t){S.tool=t;toolbar();const svg=document.getElementById("fsSvg");if(svg)svg.style.cursor=t==="pan"?"grab":t==="select"?"default":"crosshair"}
 
 /* ---------- ไฟล์ ---------- */
@@ -215,16 +217,16 @@ const JSONTXT=()=>JSON.stringify(S.doc,null,1);
 const dl=(name,data,type)=>{const b=data instanceof Blob?data:new Blob([data],{type:type||"application/octet-stream"}),u=URL.createObjectURL(b),a=document.createElement("a");a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),2000)};
 const base=()=>(S.fileName||S.doc.title||"flow").replace(/\.flow\.json$/,"").replace(/[\\/:*?"<>|]/g,"_");
 async function save(as){try{if(G.showSaveFilePicker&&(as||!S.handle)){S.handle=await G.showSaveFilePicker({suggestedName:base()+".flow.json",types:[{description:"FlowStudio",accept:{"application/json":[".json"]}}]});S.fileName=S.handle.name}
-  if(S.handle){const w=await S.handle.createWritable();await w.write(JSONTXT());await w.close()}else dl(base()+".flow.json",JSONTXT(),"application/json");S.dirty=false;autosave();draw();props();msg("บันทึกแล้ว "+(S.fileName||""))}catch(e){if(e.name!=="AbortError")msg("บันทึกไม่สำเร็จ: "+e.message,true)}}
-async function open(){try{if(G.showOpenFilePicker){const[h]=await G.showOpenFilePicker({types:[{description:"FlowStudio / Obsidian canvas",accept:{"application/json":[".json",".canvas"]}}]});const f=await h.getFile();const t=await f.text();loadText(t,f.name);if(f.name.endsWith(".flow.json")){S.handle=h}}else{const i=document.createElement("input");i.type="file";i.accept=".json,.canvas";i.onchange=async()=>{const f=i.files[0];loadText(await f.text(),f.name)};i.click()}}catch(e){if(e.name!=="AbortError")msg("เปิดไม่สำเร็จ: "+e.message,true)}}
-function loadText(t,name){let d;try{d=JSON.parse(t)}catch(e){msg("ไฟล์ไม่ใช่ JSON",true);return}
+  if(S.handle){const w=await S.handle.createWritable();await w.write(JSONTXT());await w.close()}else dl(base()+".flow.json",JSONTXT(),"application/json");S.dirty=false;autosave();draw();props();msg("Saved "+(S.fileName||""))}catch(e){if(e.name!=="AbortError")msg("Save failed: "+e.message,true)}}
+async function open(){try{if(G.showOpenFilePicker){const[h]=await G.showOpenFilePicker({types:[{description:"FlowStudio / Obsidian canvas",accept:{"application/json":[".json",".canvas"]}}]});const f=await h.getFile();const t=await f.text();loadText(t,f.name);if(f.name.endsWith(".flow.json")){S.handle=h}}else{const i=document.createElement("input");i.type="file";i.accept=".json,.canvas";i.onchange=async()=>{const f=i.files[0];loadText(await f.text(),f.name)};i.click()}}catch(e){if(e.name!=="AbortError")msg("Open failed: "+e.message,true)}}
+function loadText(t,name){let d;try{d=JSON.parse(t)}catch(e){msg("File is not JSON",true);return}
   if(d.nodes&&d.nodes.some(n=>n.type==="text"||n.type==="file"||n.type==="group")&&!d.v)d=fromObsidian(d);
-  S.handle=null;load(d,name);recent(name);msg("เปิด "+name+" แล้ว")}
+  S.handle=null;load(d,name);recent(name);msg("Opened "+name)}
 function recent(name){try{const r=JSON.parse(localStorage.getItem("flowstudio_recent")||"[]").filter(x=>x.name!==name);r.unshift({name,at:Date.now(),doc:S.doc});localStorage.setItem("flowstudio_recent",JSON.stringify(r.slice(0,12)))}catch(e){}}
-function newDoc(){if(S.dirty&&!confirm("ผังปัจจุบันยังไม่ได้บันทึก สร้างผังใหม่หรือไม่"))return;S.handle=null;load(blank("ผังใหม่"));msg("สร้างผังใหม่แล้ว")}
+function newDoc(){if(S.dirty&&!confirm("Current diagram is not saved. Create a new one?"))return;S.handle=null;load(blank("Untitled"));msg("New diagram")}
 
 /* ---------- Obsidian canvas ---------- */
-function fromObsidian(c){const d=blank("จาก Obsidian");const cmap=v=>{if(!v)return"c-primary";const m={1:"c-red",2:"c-orange",3:"c-yellow",4:"c-green",5:"c-sky",6:"c-purple"};if(m[v])return m[v];return nearest(v)};
+function fromObsidian(c){const d=blank("From Obsidian");const cmap=v=>{if(!v)return"c-primary";const m={1:"c-red",2:"c-orange",3:"c-yellow",4:"c-green",5:"c-sky",6:"c-purple"};if(m[v])return m[v];return nearest(v)};
   let minx=Infinity,miny=Infinity;c.nodes.forEach(n=>{minx=Math.min(minx,n.x);miny=Math.min(miny,n.y)});
   c.nodes.forEach(n=>{const t=(n.text||n.file||n.label||"").split("\n"),main=t[0].replace(/^#+\s*|\*\*/g,""),sub=t.slice(1).join(" ").replace(/\*\*/g,"");d.nodes.push({id:n.id,type:n.type==="group"?"lane":"round",x:n.x-minx+40,y:n.y-miny+40,w:n.width,h:n.height,text:n.type==="group"?(n.label||""):main,sub:n.type==="group"?"":sub,color:cmap(n.color),fill:"tint"})});
   (c.edges||[]).forEach(e=>d.edges.push({id:e.id,from:{node:e.fromNode,side:e.fromSide||"right"},to:{node:e.toNode,side:e.toSide||"left"},label:e.label||"",head:e.toEnd==="none"?"none":"end",route:"ortho",color:cmap(e.color)}));
@@ -232,7 +234,7 @@ function fromObsidian(c){const d=blank("จาก Obsidian");const cmap=v=>{if(!
 function nearest(h){const rgb=x=>[parseInt(x.slice(1,3),16),parseInt(x.slice(3,5),16),parseInt(x.slice(5,7),16)];const t=rgb(h);let best="c-primary",bd=1e9;COLORS.forEach(c=>{const v=rgb(hex(c)),dd=v.reduce((a,b,i)=>a+(b-t[i])**2,0);if(dd<bd){bd=dd;best=c}});return best}
 function toObsidian(){const d=S.doc,nodes=d.nodes.map(n=>({id:n.id,type:"text",text:(n.text?"**"+n.text+"**":"")+(n.sub?"\n"+n.sub:""),x:n.x,y:n.y,width:n.w,height:n.h,color:hex(n.color)}));
   const edges=d.edges.filter(e=>e.from.node&&e.to.node).map(e=>({id:e.id,fromNode:e.from.node,fromSide:e.from.side||"right",toNode:e.to.node,toSide:e.to.side||"left",label:e.label||undefined,color:hex(e.color),toEnd:e.head==="none"?"none":undefined,fromEnd:e.head==="both"?"arrow":undefined}));
-  dl(base()+".canvas",JSON.stringify({nodes,edges},null,1),"application/json");msg("ส่งออก Obsidian canvas แล้ว")}
+  dl(base()+".canvas",JSON.stringify({nodes,edges},null,1),"application/json");msg("Obsidian canvas exported")}
 
 /* ---------- ส่งออกภาพ / PDF / HTML ---------- */
 function bounds(){const d=S.doc;let x0=d.w,y0=d.h,x1=0,y1=0;const add=(x,y)=>{x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x);y1=Math.max(y1,y)};
@@ -244,14 +246,14 @@ function standaloneSvg(){const d=S.doc,b=bounds(),keep={sel:new Set(S.sel),se:S.
   const css=`.fs-node{font-family:'Kanit',sans-serif;font-size:16px;line-height:1.3;color:${hex("ink")};display:flex;align-items:center;justify-content:center;text-align:center;height:100%;box-sizing:border-box;padding:6px 10px;word-break:break-word;overflow:hidden}.fs-node b{font-weight:600}.fs-node small{display:block;font-size:14px;color:${hex("muted")};margin-top:2px}.fs-node.lane{align-items:flex-start;justify-content:flex-start;font-weight:600;padding:8px 12px}.fs-node.note{align-items:flex-start;justify-content:flex-start;text-align:left;font-size:14px}.fs-node.dk{color:#fff}.fs-node.dk small{color:rgba(255,255,255,.85)}.fs-elabel{font-family:'Kanit',sans-serif;font-size:14px;fill:${hex("ink")}}.fs-elabelbg{fill:${hex("card")};stroke:${hex("line")};stroke-width:.5}.fs-edge-hit{fill:none;stroke:transparent;stroke-width:16}`;
   const svg=`<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${b.w}" height="${b.h}" viewBox="${b.x} ${b.y} ${b.w} ${b.h}"><style>${(G.HD_FONTCSS||"")}${css}</style><rect x="${b.x}" y="${b.y}" width="${b.w}" height="${b.h}" fill="${hex("card")}"/>${g}</svg>`;
   return{svg:resolveVars(svg),b}}
-function exportSvg(){const{svg}=standaloneSvg();dl(base()+".svg",svg,"image/svg+xml");msg("ส่งออก SVG แล้ว")}
-function exportPng(scale){const{svg,b}=standaloneSvg(),img=new Image(),s=scale||2;img.onload=()=>{const c=document.createElement("canvas");c.width=b.w*s;c.height=b.h*s;const x=c.getContext("2d");x.scale(s,s);x.drawImage(img,0,0);c.toBlob(bl=>{dl(base()+".png",bl);msg("ส่งออก PNG แล้ว")})};img.onerror=()=>msg("สร้างภาพไม่สำเร็จ",true);img.src="data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svg)}
-function exportPdf(){const{svg,b}=standaloneSvg(),w=window.open("","_blank");if(!w){msg("เบราว์เซอร์บล็อกหน้าต่างใหม่",true);return}
-  w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${esc(S.doc.title)}</title><style>${G.HD_FONTCSS||""}@page{size:${b.w>b.h?"landscape":"portrait"};margin:10mm}body{margin:0;font-family:Kanit,sans-serif}svg{width:100%;height:auto}h1{font-size:16px;color:#5A6B7B;font-weight:500;margin:0 0 6px}</style></head><body><h1>${esc(S.doc.title)}</h1>${svg}<script>setTimeout(()=>window.print(),600)<\/script></body></html>`);w.document.close();msg("เปิดหน้าพิมพ์ เลือก บันทึกเป็น PDF")}
-function exportHtml(){const{svg}=standaloneSvg();const h=`<!DOCTYPE html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(S.doc.title)}</title><style>${G.HD_FONTCSS||""}body{margin:0;background:#FBF5E9;font-family:Kanit,sans-serif;color:#1F2933}header{padding:10px 16px;background:#fff;border-bottom:1px solid #E6DCC8;font-size:16px;font-weight:600}main{padding:12px;overflow:auto}svg{max-width:100%;height:auto;background:#fff;border:1px solid #E6DCC8;border-radius:12px}</style></head><body><header>${esc(S.doc.title)}</header><main>${svg}</main><script type="application/json" id="flow">${JSONTXT().replace(/<\//g,"<\\/")}<\/script></body></html>`;dl(base()+".html",h,"text/html");msg("ส่งออก HTML แล้ว (ฝังไฟล์ผังไว้ในหน้าด้วย)")}
+function exportSvg(){const{svg}=standaloneSvg();dl(base()+".svg",svg,"image/svg+xml");msg("SVG exported")}
+function exportPng(scale){const{svg,b}=standaloneSvg(),img=new Image(),s=scale||2;img.onload=()=>{const c=document.createElement("canvas");c.width=b.w*s;c.height=b.h*s;const x=c.getContext("2d");x.scale(s,s);x.drawImage(img,0,0);c.toBlob(bl=>{dl(base()+".png",bl);msg("PNG exported")})};img.onerror=()=>msg("Image export failed",true);img.src="data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svg)}
+function exportPdf(){const{svg,b}=standaloneSvg(),w=window.open("","_blank");if(!w){msg("Pop-up blocked by browser",true);return}
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${esc(S.doc.title)}</title><style>${G.HD_FONTCSS||""}@page{size:${b.w>b.h?"landscape":"portrait"};margin:10mm}body{margin:0;font-family:Kanit,sans-serif}svg{width:100%;height:auto}h1{font-size:16px;color:#5A6B7B;font-weight:500;margin:0 0 6px}</style></head><body><h1>${esc(S.doc.title)}</h1>${svg}<script>setTimeout(()=>window.print(),600)<\/script></body></html>`);w.document.close();msg("Print dialog opened: choose Save as PDF")}
+function exportHtml(){const{svg}=standaloneSvg();const h=`<!DOCTYPE html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(S.doc.title)}</title><style>${G.HD_FONTCSS||""}body{margin:0;background:#FBF5E9;font-family:Kanit,sans-serif;color:#1F2933}header{padding:10px 16px;background:#fff;border-bottom:1px solid #E6DCC8;font-size:16px;font-weight:600}main{padding:12px;overflow:auto}svg{max-width:100%;height:auto;background:#fff;border:1px solid #E6DCC8;border-radius:12px}</style></head><body><header>${esc(S.doc.title)}</header><main>${svg}</main><script type="application/json" id="flow">${JSONTXT().replace(/<\//g,"<\\/")}<\/script></body></html>`;dl(base()+".html",h,"text/html");msg("HTML exported (diagram data embedded)")}
 
 /* ---------- ส่งออก PPTX (รูปทรงแก้ได้ใน PowerPoint) ---------- */
-function loadScript(src){return new Promise((ok,no)=>{if(G.PptxGenJS)return ok();const s=document.createElement("script");s.src=src;s.onload=ok;s.onerror=()=>no(new Error("โหลด "+src+" ไม่ได้"));document.head.appendChild(s)})}
+function loadScript(src){return new Promise((ok,no)=>{if(G.PptxGenJS)return ok();const s=document.createElement("script");s.src=src;s.onload=ok;s.onerror=()=>no(new Error("Cannot load "+src));document.head.appendChild(s)})}
 async function exportPptx(){try{await loadScript("lib/pptxgen.bundle.js")}catch(e){msg(e.message,true);return}
   const d=S.doc,b=bounds(),P=new G.PptxGenJS();P.layout="LAYOUT_WIDE";const W=13.333,H=7.5,M=0.4,sc=Math.min((W-2*M)/b.w,(H-1.2-M)/b.h);const X=x=>M+(x-b.x)*sc,Y=y=>1.0+(y-b.y)*sc,L=v=>v*sc;
   const s=P.addSlide();s.addText(d.title,{x:0.4,y:0.25,w:12.5,h:0.6,fontFace:"Kanit",fontSize:24,bold:true,color:hex("c-navy").slice(1)});
@@ -269,36 +271,44 @@ async function exportPptx(){try{await loadScript("lib/pptxgen.bundle.js")}catch(
       if(last&&e.head!=="none")o.line.endArrowType="triangle";if(first&&e.head==="both")o.line.beginArrowType="triangle";s.addShape(P.ShapeType.line,o)}
     if(e.label){const m=midOf(pts),w=Math.max(0.6,e.label.length*0.11);s.addText(e.label,{x:X(m.x)-w/2,y:Y(m.y)-0.14,w:w,h:0.28,fontFace:"Kanit",fontSize:10,color:hex("ink").slice(1),fill:{color:hex("card").slice(1)},align:"center",valign:"middle",margin:0})}});
   others.forEach(nodeOut);
-  await P.writeFile({fileName:base()+".pptx"});msg("ส่งออก PPTX แล้ว (รูปทรงแก้ไขใน PowerPoint ได้)")}
+  await P.writeFile({fileName:base()+".pptx"});msg("PPTX exported (shapes editable in PowerPoint)")}
 
-/* ---------- หน้า ---------- */
-function renderEditor(el){el.innerHTML=`<div class="fs-wrap"><div class="fs-tools" id="fsTools"></div>
-  <div class="fs-stage"><div class="fs-bar">
-    <button onclick="FS.newDoc()">${HDShell.ic("file",15)} ใหม่</button><button onclick="FS.open()">เปิด</button><button class="hot" onclick="FS.save()">บันทึก</button><button onclick="FS.save(true)">บันทึกเป็น</button><span class="sep"></span>
-    <button onclick="FS.exportPptx()">PPTX</button><button onclick="FS.exportPng()">PNG</button><button onclick="FS.exportSvg()">SVG</button><button onclick="FS.exportPdf()">PDF</button><button onclick="FS.exportHtml()">HTML</button><button onclick="FS.toObsidian()">Obsidian</button><span class="sep"></span>
-    <button onclick="FS.zoomAt(1.2)">+</button><button onclick="FS.zoomAt(1/1.2)">-</button><button onclick="FS.fit()">พอดีจอ</button></div>
+/* ---------- Pages ---------- */
+const EXPORTS=[["exportPptx","PPTX (editable shapes)"],["exportPng","PNG image"],["exportSvg","SVG vector"],["exportPdf","PDF (print)"],["exportHtml","HTML page"],["toObsidian","Obsidian canvas"]];
+function renderEditor(el){el.classList.add("fs-editor");el.innerHTML=`<div class="fs-wrap" id="fsWrap"><div class="fs-tools" id="fsTools"></div>
+  <div class="fs-stage" id="fsStage"><div class="fs-bar">
+    <button title="New" onclick="FS.newDoc()">${HDShell.ic("file",15)}<span class="lb">New</span></button><button title="Open" onclick="FS.open()">Open</button><button class="hot" title="Save (Ctrl+S)" onclick="FS.save()">Save</button><button title="Save as" onclick="FS.save(true)">Save as</button><span class="sep"></span>
+    <span class="dd"><button onclick="FS.menu('fsExp')">Export ▾</button><div class="menu" id="fsExp">${EXPORTS.map(x=>`<button onclick="FS.${x[0]}();FS.menu()">${x[1]}</button>`).join("")}</div></span><span class="sep"></span>
+    <button title="Zoom out" onclick="FS.zoomAt(1/1.2)">−</button><span class="zv" id="fsZoom">100%</span><button title="Zoom in" onclick="FS.zoomAt(1.2)">+</button><button title="Fit to screen" onclick="FS.fit()">Fit</button>
+    <button class="pp" title="Properties" onclick="FS.togglePanel()">${HDShell.ic("gantt",15)}<span class="lb">Properties</span></button></div>
     <svg id="fsSvg" class="main"></svg><div class="fs-status" id="fsStatus"></div><div class="fs-msg" id="fsMsg"></div></div>
   <div class="fs-props" id="fsProps"></div></div>`;
-  const svg=document.getElementById("fsSvg");bind(svg);toolbar();props();new ResizeObserver(()=>draw()).observe(svg);
+  const svg=document.getElementById("fsSvg");bind(svg);toolbar();props();
+  let last=null;new ResizeObserver(()=>{sizeStage();const r=svg.getBoundingClientRect();if(S.autofit&&r.width>50&&r.height>50&&(!last||Math.abs(last.w-r.width)>2||Math.abs(last.h-r.height)>2)){last={w:r.width,h:r.height};fit()}else draw()}).observe(svg);
+  addEventListener("resize",sizeStage);addEventListener("orientationchange",()=>setTimeout(sizeStage,300));
+  document.addEventListener("click",ev=>{if(!ev.target.closest(".dd"))menu()});
   if(!S.booted){S.booted=true;try{const a=JSON.parse(localStorage.getItem("flowstudio_auto")||"null");if(a&&a.doc&&a.doc.nodes&&a.doc.nodes.length){S.doc=migrate(a.doc);S.fileName=a.name||null}}catch(e){}}
-  requestAnimationFrame(fit)}
-function renderFiles(el){let r=[];try{r=JSON.parse(localStorage.getItem("flowstudio_recent")||"[]")}catch(e){}
-  el.innerHTML=`<div class="hs-card"><h3>ตัวอย่างและแม่แบบ</h3><div class="fs-list">${(G.FS_SAMPLES||[]).map((s,i)=>`<div class="it"><b>${esc(s.title)}</b><small>${s.nodes.length} กล่อง · ${s.edges.length} เส้น</small><div class="act"><button onclick="FS.openSample(${i})">เปิดในผัง</button></div></div>`).join("")}</div></div>
-  <div class="hs-card"><h3>ไฟล์ล่าสุด (เก็บในเบราว์เซอร์นี้)</h3>${r.length?`<div class="fs-list">${r.map((x,i)=>`<div class="it"><b>${esc(x.name)}</b><small>${new Date(x.at).toLocaleString("th-TH")}</small><div class="act"><button onclick="FS.openRecent(${i})">เปิด</button></div></div>`).join("")}</div>`:`<p class="hs-hint">ยังไม่มี · ใช้ปุ่ม "เปิด" ในหน้าผังเพื่อเปิดไฟล์ .flow.json หรือ Obsidian .canvas</p>`}</div>
-  <div class="hs-card"><h3>ที่เก็บไฟล์</h3><p>บนคอมพ์ ปุ่ม "บันทึก" เขียนลงโฟลเดอร์ที่เลือกโดยตรง (Chrome/Edge) · บนแท็บเล็ต ไฟล์จะดาวน์โหลดลงโฟลเดอร์ Download เปิดซ้ำได้จาก Google Drive หรือตัวจัดการไฟล์ · ทุกการแก้บันทึกอัตโนมัติในเบราว์เซอร์ เปิดแอปครั้งถัดไปจะได้ผังล่าสุดคืนมา</p></div>`}
-function renderPaste(el){el.innerHTML=`<div class="hs-card"><h3>วางผังจาก Claude</h3><p>ส่งภาพร่างให้ Claude (skill <b>sketch-to-flow</b>) แล้วนำ JSON ที่ได้มาวางที่นี่ หรือวาง Obsidian .canvas ก็ได้</p>
+  S.autofit=true;sizeStage();requestAnimationFrame(()=>{sizeStage();fit()})}
+function sizeStage(){const w=document.getElementById("fsWrap");if(!w)return;const top=w.getBoundingClientRect().top,h=Math.max(360,window.innerHeight-top-10);w.style.height=h+"px"}
+function menu(id){document.querySelectorAll(".fs-bar .menu").forEach(m=>{m.classList.toggle("on",!!id&&m.id===id&&!m.classList.contains("on"))})}
+function togglePanel(){const w=document.getElementById("fsWrap");if(w)w.classList.toggle("panel")}
+function renderFiles(el){el.classList.remove("fs-editor");let r=[];try{r=JSON.parse(localStorage.getItem("flowstudio_recent")||"[]")}catch(e){}
+  el.innerHTML=`<div class="hs-card"><h3>Samples and templates</h3><div class="fs-list">${(G.FS_SAMPLES||[]).map((s,i)=>`<div class="it"><b>${esc(s.title)}</b><small>${s.nodes.length} shapes · ${s.edges.length} connectors</small><div class="act"><button onclick="FS.openSample(${i})">Open in editor</button></div></div>`).join("")}</div></div>
+  <div class="hs-card"><h3>Recent files (stored in this browser)</h3>${r.length?`<div class="fs-list">${r.map((x,i)=>`<div class="it"><b>${esc(x.name)}</b><small>${new Date(x.at).toLocaleString()}</small><div class="act"><button onclick="FS.openRecent(${i})">Open</button></div></div>`).join("")}</div>`:`<p class="hs-hint">None yet. Use "Open" in the editor to open a .flow.json file or an Obsidian .canvas file.</p>`}</div>
+  <div class="hs-card"><h3>Where files live</h3><p>On a PC, "Save" writes directly to the folder you choose (Chrome/Edge). On a tablet the file is downloaded to the Download folder; move it to Google Drive > FlowStudio to continue on the PC. Every edit is also auto-saved in this browser, so the last diagram comes back when the app is reopened.</p></div>`}
+function renderPaste(el){el.classList.remove("fs-editor");el.innerHTML=`<div class="hs-card"><h3>Paste from Claude</h3><p>Send a sketch to Claude (skill <b>sketch-to-flow</b>), then paste the JSON it returns here. An Obsidian .canvas JSON also works.</p>
   <textarea id="fsPasteBox" style="width:100%;min-height:260px;box-sizing:border-box;border:1px solid var(--line);border-radius:10px;padding:10px;font-family:monospace;font-size:13px" placeholder='{"v":1,"title":"...","nodes":[...],"edges":[...]}'></textarea>
-  <div style="display:flex;gap:8px;margin-top:10px"><button class="hs-b" style="background:var(--c-primary);color:#fff;border:0;border-radius:10px;padding:10px 18px;font-size:15px;cursor:pointer" onclick="FS.pasteJson()">นำเข้าและเปิดในผัง</button><button class="hs-b" style="border:1px solid var(--line);background:var(--card);border-radius:10px;padding:10px 18px;font-size:15px;cursor:pointer" onclick="FS.copyJson()">คัดลอกผังปัจจุบันเป็น JSON</button></div><p id="fsPasteMsg" class="hs-hint"></p></div>`}
-function pasteJson(){const t=document.getElementById("fsPasteBox").value.trim();if(!t)return;loadText(t,"วางจาก Claude");HDShell.go("editor")}
-async function copyJson(){try{await navigator.clipboard.writeText(JSONTXT());document.getElementById("fsPasteMsg").textContent="คัดลอกแล้ว นำไปวางในแชตกับ Claude เพื่อให้ปรับผังต่อได้"}catch(e){document.getElementById("fsPasteBox").value=JSONTXT()}}
-function openSample(i){const s=G.FS_SAMPLES[i];if(S.dirty&&!confirm("ผังปัจจุบันยังไม่ได้บันทึก เปิดตัวอย่างแทนหรือไม่"))return;S.handle=null;load(JSON.parse(JSON.stringify(s)),null);HDShell.go("editor")}
+  <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button class="hs-b" style="background:var(--c-primary);color:#fff;border:0;border-radius:10px;padding:10px 18px;font-size:15px;cursor:pointer" onclick="FS.pasteJson()">Import and open in editor</button><button class="hs-b" style="border:1px solid var(--line);background:var(--card);border-radius:10px;padding:10px 18px;font-size:15px;cursor:pointer" onclick="FS.copyJson()">Copy current diagram as JSON</button></div><p id="fsPasteMsg" class="hs-hint"></p></div>`}
+function pasteJson(){const t=document.getElementById("fsPasteBox").value.trim();if(!t)return;loadText(t,"Pasted from Claude");HDShell.go("editor")}
+async function copyJson(){try{await navigator.clipboard.writeText(JSONTXT());document.getElementById("fsPasteMsg").textContent="Copied. Paste it into the chat with Claude to have the diagram revised."}catch(e){document.getElementById("fsPasteBox").value=JSONTXT()}}
+function openSample(i){const s=G.FS_SAMPLES[i];if(S.dirty&&!confirm("Current diagram is not saved. Open the sample instead?"))return;S.handle=null;load(JSON.parse(JSON.stringify(s)),null);HDShell.go("editor")}
 function openRecent(i){const r=JSON.parse(localStorage.getItem("flowstudio_recent")||"[]")[i];if(!r)return;S.handle=null;load(r.doc,r.name);HDShell.go("editor")}
-function renderHelp(el){el.innerHTML=`<div class="hs-card"><h3>วงจรการทำงาน</h3><ol><li>วาดภาพร่างใน Samsung Notes (หรือกระดาษ) แล้วแชร์เป็นภาพเข้าแอป Claude</li><li>Claude อ่านภาพด้วย skill sketch-to-flow แล้วส่งกลับเป็นไฟล์ .flow.json (หรือข้อความ JSON)</li><li>เปิดไฟล์ หรือวางข้อความที่หน้า "วางจาก Claude" แล้วปรับแก้ด้วยเมาส์ นิ้ว หรือ S Pen</li><li>บันทึกเป็น .flow.json (เปิดต่อได้ทั้งคอมพ์และแท็บเล็ต) และส่งออก PPTX / PNG / SVG / PDF / HTML / Obsidian ได้จากแถบบนของผัง</li></ol></div>
-  <div class="hs-card"><h3>รูปแบบไฟล์ .flow.json</h3><pre>{
- "v": 1, "title": "ชื่อผัง", "w": 1600, "h": 1000, "grid": true,
+function renderHelp(el){el.classList.remove("fs-editor");el.innerHTML=`<div class="hs-card"><h3>Workflow</h3><ol><li>Sketch in Samsung Notes (or on paper) and share the image to the Claude app.</li><li>Claude reads it with the sketch-to-flow skill and returns a .flow.json file (or JSON text).</li><li>Open the file, or paste the text on the "Paste from Claude" page, then adjust with mouse, finger or S Pen.</li><li>Save as .flow.json (opens on both PC and tablet) and export PPTX / PNG / SVG / PDF / HTML / Obsidian from the Export menu.</li></ol></div>
+  <div class="hs-card"><h3>File format (.flow.json)</h3><pre>{
+ "v": 1, "title": "Diagram title", "w": 1600, "h": 1000, "grid": true,
  "nodes": [
   {"id": "k1", "type": "round", "x": 120, "y": 160, "w": 220, "h": 100,
-   "text": "กนอ.", "sub": "บทบาท 1 กติกา", "color": "c-primary", "fill": "tint",
+   "text": "IEAT", "sub": "Role 1 Rules", "color": "c-primary", "fill": "tint",
    "icon": "gov", "dash": false, "font": 16}
  ],
  "edges": [
@@ -307,8 +317,8 @@ function renderHelp(el){el.innerHTML=`<div class="hs-card"><h3>วงจรก�
    "head": "end", "route": "ortho", "dash": false, "color": "c-navy"}
  ]
 }</pre>
-  <p><b>type</b> rect · round · capsule · diamond · circle · doc · note · lane (เลนวาดอยู่หลังสุด ลากเลนแล้วกล่องข้างในย้ายตาม กด Alt ค้างเพื่อย้ายเฉพาะเลน)<br><b>color</b> c-primary c-navy c-sky c-green c-yellow c-orange c-red c-brown c-purple c-pink c-grey (เปลี่ยนตามธีม 3 ชุด)<br><b>fill</b> tint สีอ่อน · solid สีเข้มตัวอักษรขาว · white<br><b>icon</b> ${Object.keys(ICONS).join(" · ")}<br><b>side</b> top right bottom left · <b>pos</b> ตำแหน่งบนด้าน 0.1-0.9 (ใช้เมื่อสองเส้นออกด้านเดียวกัน) · <b>head</b> end both none · <b>route</b> ortho (หักมุม) straight · <b>via</b> [{"x":80,"y":900}] จุดอ้อมเมื่อไม่ต้องการให้เส้นผ่านกล่องอื่น · เส้นที่ไม่ผูกกล่องใช้ {"x":..,"y":..} แทน node</p></div>
-  <div class="hs-card"><h3>คีย์ลัด</h3><p>Ctrl+Z / Ctrl+Y ย้อนกลับ ทำซ้ำ · Ctrl+C / Ctrl+V คัดลอก วาง · Ctrl+A เลือกทั้งหมด · Ctrl+S บันทึก · Delete ลบ · ลูกศร ขยับ 1 px (Shift = 20 px) · Space ค้าง เลื่อนผัง · Esc กลับเครื่องมือเลือก · ดับเบิลคลิก พิมพ์ข้อความ</p></div>`}
+  <p><b>type</b> rect · round · capsule · diamond · circle · doc · note · lane (lanes are drawn at the back; dragging a lane moves its contents, hold Alt to move the lane only)<br><b>color</b> c-primary c-navy c-sky c-green c-yellow c-orange c-red c-brown c-purple c-pink c-grey (follows the 3 themes)<br><b>fill</b> tint · solid (white text) · white<br><b>icon</b> ${Object.keys(ICONS).join(" · ")}<br><b>side</b> top right bottom left · <b>pos</b> position along the side 0.1-0.9 (when two connectors leave the same side) · <b>head</b> end both none · <b>route</b> ortho straight · <b>via</b> [{"x":80,"y":900}] waypoints to route around other shapes · a free end uses {"x":..,"y":..} instead of node</p></div>
+  <div class="hs-card"><h3>Keyboard shortcuts</h3><p>Ctrl+Z / Ctrl+Y undo, redo · Ctrl+C / Ctrl+V copy, paste · Ctrl+A select all · Ctrl+S save · Delete · Arrow keys nudge 1 px (Shift = 20 px) · hold Space to pan · Esc back to Select · double-click to edit text</p></div>`}
 
-G.FS={renderEditor,renderFiles,renderPaste,renderHelp,tool,undo,redo,copy,paste,del,align,order,setN,setNColor,setE,setEColor,setSide,setPos,setVia,flipEdge,setDoc,save,open,newDoc,exportSvg,exportPng,exportPdf,exportHtml,exportPptx,toObsidian,zoomAt:(f)=>{const s=document.getElementById("fsSvg");zoomAt(f,s.clientWidth/2,s.clientHeight/2)},fit,pasteJson,copyJson,openSample,openRecent,load,state:S};
+G.FS={renderEditor,menu,togglePanel,renderFiles,renderPaste,renderHelp,tool,undo,redo,copy,paste,del,align,order,setN,setNColor,setE,setEColor,setSide,setPos,setVia,flipEdge,setDoc,save,open,newDoc,exportSvg,exportPng,exportPdf,exportHtml,exportPptx,toObsidian,zoomAt:(f)=>{const s=document.getElementById("fsSvg");zoomAt(f,s.clientWidth/2,s.clientHeight/2)},fit,pasteJson,copyJson,openSample,openRecent,load,state:S};
 })(window);
