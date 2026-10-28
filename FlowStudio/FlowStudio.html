@@ -18,9 +18,14 @@ body{margin:0}
 .hs-wrap.fs-editor{padding:8px 10px 8px;max-width:none}
 .fs-wrap{display:flex;gap:8px;height:70vh;min-height:360px}
 /* ---- left tool rail ---- */
-.fs-tools{width:148px;flex:none;display:flex;flex-direction:column;gap:4px;overflow-y:auto;padding-right:2px}
-.fs-tools h4{margin:6px 0 2px;font-size:13px;color:var(--muted);font-weight:500}
-.fs-tools button,.fs-props button,.fs-bar button{display:flex;align-items:center;gap:7px;width:100%;border:1px solid var(--line);background:var(--card);border-radius:9px;padding:6px 9px;cursor:pointer;color:var(--ink);text-align:left;font-size:14px;min-height:36px}
+.fs-tools{width:140px;flex:none;display:flex;flex-direction:column;gap:4px;overflow:visible;padding-right:2px}
+.fs-tools .dd{position:relative;display:block}
+.fs-tools .menu{display:none;position:absolute;left:0;top:38px;background:var(--card);border:1px solid var(--line);border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.15);padding:6px;min-width:190px;z-index:7}
+.fs-tools .menu.on{display:block}
+.fs-tools .menu button{border:0;border-radius:7px;background:transparent}
+.fs-tools .menu button:hover{background:var(--bg2)}
+.fs-tools h4{margin:4px 0 1px;font-size:12px;color:var(--muted);font-weight:500}
+.fs-tools button,.fs-bar button{display:flex;align-items:center;gap:7px;width:100%;border:1px solid var(--line);background:var(--card);border-radius:9px;padding:5px 9px;cursor:pointer;color:var(--ink);text-align:left;font-size:13.5px;min-height:34px}
 .fs-tools button.on{background:color-mix(in srgb,var(--tc,var(--c-primary)) 16%,white);border-color:var(--tc,var(--c-primary));color:var(--tc,var(--c-primary));font-weight:500}
 .fs-tools button .sw{width:18px;height:18px;border-radius:5px;flex:none;border:2px solid var(--tc);background:color-mix(in srgb,var(--tc) 18%,white)}
 .fs-tools button .sw.cap{border-radius:9px}.fs-tools button .sw.dia{transform:rotate(45deg) scale(.8)}.fs-tools button .sw.note{border-style:dashed}.fs-tools button .sw.lane{width:22px;height:14px}.fs-tools button .sw.circ{border-radius:50%}
@@ -40,23 +45,32 @@ body{margin:0}
 .fs-bar .menu button:hover{background:var(--bg2)}
 .fs-status{position:absolute;left:10px;bottom:8px;font-size:13px;color:var(--muted);background:color-mix(in srgb,var(--card) 90%,transparent);padding:2px 8px;border-radius:8px;z-index:3;max-width:70%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .fs-msg{position:absolute;right:10px;bottom:8px;font-size:14px;color:#fff;background:var(--c-green);padding:4px 12px;border-radius:8px;z-index:3;display:none}
-/* ---- right properties panel ---- */
-.fs-props{width:250px;flex:none;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding-left:2px}
-.fs-props .box{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
-.fs-props h4{margin:0 0 6px;font-size:14px;color:var(--c-navy);font-weight:600}
-.fs-props label{display:block;font-size:13px;color:var(--muted);margin-top:6px}
-.fs-props input[type=text],.fs-props textarea,.fs-props select,.fs-props input[type=number]{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:14px;background:var(--card);color:var(--ink)}
-.fs-props textarea{min-height:60px;resize:vertical}
-.fs-props .row{display:flex;gap:6px}.fs-props .row>*{flex:1;min-width:0}
-.fs-props .swatches{display:flex;flex-wrap:wrap;gap:5px;margin-top:4px}
-.fs-props .swatches span{width:26px;height:26px;border-radius:7px;cursor:pointer;border:2px solid transparent}
-.fs-props .swatches span.on{border-color:var(--ink);box-shadow:0 0 0 2px #fff inset}
-.fs-props .hint{font-size:13px;color:var(--muted)}
-.fs-props .step{display:flex;align-items:center;gap:4px;margin-top:2px}
-.fs-props .step button{width:34px;min-height:32px;padding:0;justify-content:center;font-size:18px;line-height:1}
-.fs-props .step span{flex:1;text-align:center;font-size:14px;min-width:40px}
-.fs-props .pclose{display:none;float:right;width:30px;min-height:30px;padding:0;justify-content:center;border-radius:8px;font-size:18px;margin:-4px -6px 0 0}
+/* ---- right properties panel (compact, PowerPoint-style sections) ---- */
+.fs-props{width:232px;flex:none;overflow-y:auto;display:flex;flex-direction:column;gap:6px;padding-left:2px;font-size:13px}
+.fs-props .ph{font-size:13px;font-weight:600;color:var(--c-navy);padding:4px 6px 0}
+.fs-props .sec{background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.fs-props .sec summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:6px;padding:7px 10px;font-size:13px;font-weight:500;color:var(--ink);background:color-mix(in srgb,var(--c-primary) 6%,var(--card));user-select:none}
+.fs-props .sec summary::-webkit-details-marker{display:none}
+.fs-props .sec summary::before{content:"▸";font-size:11px;color:var(--muted);width:10px}
+.fs-props .sec[open] summary::before{content:"▾"}
+.fs-props .sb{padding:6px 10px 9px;display:flex;flex-direction:column;gap:5px}
+.fs-props label{display:block;font-size:12px;color:var(--muted);min-width:0}
+.fs-props label.ck{display:flex;align-items:center;gap:4px;align-self:end;padding-bottom:6px;white-space:nowrap}
+.fs-props input[type=text],.fs-props textarea,.fs-props select,.fs-props input[type=number]{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:7px;padding:4px 7px;font-size:13px;background:var(--card);color:var(--ink);margin-top:2px}
+.fs-props textarea{min-height:44px;resize:vertical}
+.fs-props .row{display:flex;gap:5px}.fs-props .row>*{flex:1;min-width:0}
+.fs-props button{display:flex;align-items:center;justify-content:center;gap:5px;width:100%;border:1px solid var(--line);background:var(--card);border-radius:7px;padding:4px 7px;cursor:pointer;color:var(--ink);font-size:12.5px;min-height:30px}
 .fs-props button.on{background:color-mix(in srgb,var(--c-primary) 16%,white);border-color:var(--c-primary);color:var(--c-primary)}
+.fs-props button.danger{color:var(--c-red);border-color:color-mix(in srgb,var(--c-red) 40%,white)}
+.fs-props .swatches{display:flex;flex-wrap:wrap;gap:4px}
+.fs-props .swatches span{width:22px;height:22px;border-radius:6px;cursor:pointer;border:2px solid transparent}
+.fs-props .swatches span.on{border-color:var(--ink);box-shadow:0 0 0 2px #fff inset}
+.fs-props .hint{font-size:12px;color:var(--muted);margin:0;line-height:1.4}
+.fs-props .st{display:grid;grid-template-columns:1fr 28px 52px 28px;align-items:center;gap:3px}
+.fs-props .st .sl{font-size:12px;color:var(--muted)}
+.fs-props .st button{width:28px;min-height:28px;padding:0;font-size:16px;line-height:1}
+.fs-props .st .sv{text-align:center;font-size:12.5px}
+.fs-props .pclose{display:none;float:right;width:28px;min-height:28px;padding:0;border-radius:7px;font-size:17px;margin:-2px -4px 0 0}
 /* ---- pen tray (shown while Pen / Eraser is active) ---- */
 .fs-pen{position:absolute;left:8px;right:8px;top:52px;z-index:3;display:flex;gap:5px;align-items:center;flex-wrap:wrap;background:color-mix(in srgb,var(--card) 94%,transparent);border:1px solid var(--line);border-radius:10px;padding:5px 8px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
 .fs-pen[hidden]{display:none}
@@ -104,7 +118,8 @@ body{margin:0}
   .hs .hs-top{padding:8px 12px 12px}
 }
 @media (max-width:1366px){
-  .fs-tools{width:48px;gap:3px;overflow-x:hidden}
+  .fs-tools{width:48px;gap:3px}
+  .fs-tools .menu{left:48px;top:0}
   .fs-tools h4{font-size:0;height:1px;background:var(--line);margin:4px 2px}
   .fs-tools button{width:44px;height:44px;min-height:44px;padding:0;justify-content:center;gap:0}
   .fs-tools button .lb{display:none}
