@@ -80,6 +80,13 @@ body{margin:0}
 .fs-pen button i{display:block;border-radius:50%;background:currentColor}
 .fs-pen button.swb i{width:18px;height:18px;background:var(--sc);box-shadow:0 0 0 1.5px rgba(0,0,0,.12)}
 .fs-pen .sep{width:1px;height:22px;background:var(--line);margin:0 3px}
+/* ---- context menu ---- */
+.fs-ctx{font-family:"Kanit","Leelawadee UI",Tahoma,sans-serif;position:fixed;z-index:80;min-width:190px;background:var(--card);border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.18);padding:5px}
+.fs-ctx[hidden]{display:none}
+.fs-ctx button{display:block;width:100%;text-align:left;border:0;background:transparent;border-radius:7px;padding:7px 12px;font-size:14px;color:var(--ink);cursor:pointer;font-family:inherit}
+.fs-ctx button:hover{background:var(--bg2)}
+.fs-ctx button:disabled{color:var(--muted);cursor:default}
+.fs-ctx hr{border:0;border-top:1px solid var(--line);margin:4px 2px}
 /* ---- scrollbars ---- */
 .fs-sb{position:absolute;z-index:4;touch-action:none;background:color-mix(in srgb,var(--line) 45%,transparent);border-radius:8px}
 .fs-sb[hidden]{display:none}

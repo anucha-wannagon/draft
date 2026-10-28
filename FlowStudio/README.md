@@ -1,4 +1,6 @@
-# FlowStudio (rev 5 · 28 ต.ค. 2569)
+# FlowStudio (rev 6 · 28 ต.ค. 2569)
+
+rev 6: เมนูคลิกขวา (คอมพ์) / แตะค้าง (แท็บเล็ต) ที่กล่อง เส้น เส้นปากกา หรือพื้นที่ว่าง: Edit text, Cut, Copy, Paste, Duplicate, Group/Ungroup, Bring to front, Send to back, Delete, Paste here, Add text/shape here, Select all, Fit · Ctrl+X ตัด · Ctrl+G จัดกลุ่ม
 
 rev 5: ปุ่ม Text (A) วางข้อความลอยไม่มีกรอบ · Fill แบบ No fill และ Border แบบ No line · จุดจับย่อขยาย 8 จุดรอบกล่อง · Connect ใช้ได้ทั้งลากและแตะสองกล่องต่อกัน ย้ายไปกลุ่ม Add · Duplicate สลับกับ Eraser
 
